@@ -15,6 +15,12 @@
 // static SDL_Surface* screenSurface = NULL;
 static int quit = 0;
 
+static RenderTexture2D render_target;
+static int window_width = 1280;
+static int window_height = 720;
+static int render_width = 256;
+static int render_height = 144;
+
 void createTileMap() {
     TB_TILEMAP = (unsigned char*) calloc( CONF_TILEMAP_WIDTH * CONF_TILEMAP_HEIGHT, sizeof(unsigned char) );
 }
@@ -153,12 +159,23 @@ static SCM draw_text(SCM text, SCM x, SCM y, SCM size, SCM color) {
     return SCM_UNSPECIFIED;
 }
 
+static void init_rendering(void) {
+    render_target = LoadRenderTexture(render_width, render_height);
+    SetTextureFilter(render_target.texture, FILTER_POINT);
+}
+
 static SCM ray_window(SCM width, SCM height, SCM title, SCM load_callback, SCM update_callback, SCM draw_callback) {
-    int win_w = scm_to_int(width);
-    int win_h = scm_to_int(height);
+    int win_w = window_width; // scm_to_int(width);
+    int win_h = window_height; // scm_to_int(height);
     char* win_title = scm_to_locale_string(title);
+    float target_scale = (float)render_width / (float)window_width / 2.0f;
+    float target_width = (float)render_width / target_scale;
+    float target_height = (float)render_height / target_scale;
+
     InitWindow(win_w, win_h, win_title);
     SetTargetFPS(60);
+
+    init_rendering();
 
     scm_call_0(load_callback);
 
@@ -168,9 +185,27 @@ static SCM ray_window(SCM width, SCM height, SCM title, SCM load_callback, SCM u
         scm_call_1(update_callback, scm_from_double(deltaTime));
         BeginDrawing();
 
-            ClearBackground(RAYWHITE);
-            scm_call_0(draw_callback);
-
+            ClearBackground(BLACK);
+            BeginTextureMode(render_target);
+                ClearBackground(BLUE);
+                scm_call_0(draw_callback);
+            EndTextureMode();
+            DrawTexturePro(
+                render_target.texture, 
+                (Rectangle){ 0, 0, render_width, -render_height }, 
+                (Rectangle){ 0, 0, target_width, target_height },
+                (Vector2){ 0, 0 }, 
+                0, 
+                WHITE
+            );
+            // DrawTextureEx(
+            //     render_target.texture,
+            //     (Vector2){ 0, 0 },
+            //     0,
+            //     10,
+            //     WHITE
+            // );
+              
         EndDrawing();
     }
     CloseWindow();
