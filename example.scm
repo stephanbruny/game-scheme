@@ -1,0 +1,6 @@
+(define (run-game dt)
+    (update-entities dt)
+    (clear-screen 0 0 0)
+    (render-tilemap 0 0)
+    (render-entities)
+)
