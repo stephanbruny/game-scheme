@@ -56,11 +56,11 @@ SCM texture_draw(SCM texture, SCM x, SCM y) {
 
 void texture_module_init() {
     init_texture_type();
-    scm_c_define_gsubr ("texture->load", 1, 0, 0, &texture_load);
-    scm_c_define_gsubr ("texture->width", 1, 0, 0, &texture_width);
-    scm_c_define_gsubr ("texture->height", 1, 0, 0, &texture_height);
-    scm_c_define_gsubr ("texture->draw", 3, 0, 0, &texture_draw);
-    scm_c_define_gsubr ("texture->unload", 1, 0, 0, &texture_unload);
+    scm_c_define_gsubr ("texture:load", 1, 0, 0, &texture_load);
+    scm_c_define_gsubr ("texture:width", 1, 0, 0, &texture_width);
+    scm_c_define_gsubr ("texture:height", 1, 0, 0, &texture_height);
+    scm_c_define_gsubr ("texture:draw", 3, 0, 0, &texture_draw);
+    scm_c_define_gsubr ("texture:unload", 1, 0, 0, &texture_unload);
 }
 
 #endif

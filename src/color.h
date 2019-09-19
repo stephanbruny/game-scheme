@@ -33,7 +33,7 @@ void color_assert_type(SCM obj) {
 
 void color_module_init() {
     init_color_type();
-    scm_c_define_gsubr ("color->rgb", 3, 0, 0, &color_rgb);
+    scm_c_define_gsubr ("color:rgb", 3, 0, 0, &color_rgb);
 }
 
 #endif

@@ -9,6 +9,9 @@
 #include "src/texture.h"
 #include "src/rect.h"
 #include "src/color.h"
+#include "src/tilemap.h"
+#include "src/event.h"
+#include "src/input.h"
 
 // static SDL_Window* window = NULL;
 // static SDL_Renderer* renderer = NULL;
@@ -20,6 +23,7 @@ static int window_width = 1280;
 static int window_height = 720;
 static int render_width = 256;
 static int render_height = 144;
+static float updateDelay = 0.0f;
 
 void createTileMap() {
     TB_TILEMAP = (unsigned char*) calloc( CONF_TILEMAP_WIDTH * CONF_TILEMAP_HEIGHT, sizeof(unsigned char) );
@@ -53,21 +57,21 @@ unsigned int* getPaletteColors(unsigned int* palette, unsigned int* data, unsign
     return result;
 }
 
-void insertTile(unsigned int x, unsigned int y, unsigned char value) {
-    if (x > CONF_TILEMAP_WIDTH || y > CONF_TILEMAP_HEIGHT) {
-        return;
-    }
-    int pos = CONF_TILEMAP_WIDTH * y + x;
-    *(TB_TILEMAP + pos) = value;
-}
+// void insertTile(unsigned int x, unsigned int y, unsigned char value) {
+//     if (x > CONF_TILEMAP_WIDTH || y > CONF_TILEMAP_HEIGHT) {
+//         return;
+//     }
+//     int pos = CONF_TILEMAP_WIDTH * y + x;
+//     *(TB_TILEMAP + pos) = value;
+// }
 
-unsigned char getTile(unsigned int x, unsigned int y) {
-    if (x > CONF_TILEMAP_WIDTH || y > CONF_TILEMAP_HEIGHT) {
-        return 0;
-    }
-    int pos = CONF_TILEMAP_WIDTH * y + x;
-    return TB_TILEMAP[pos];
-}
+// unsigned char getTile(unsigned int x, unsigned int y) {
+//     if (x > CONF_TILEMAP_WIDTH || y > CONF_TILEMAP_HEIGHT) {
+//         return 0;
+//     }
+//     int pos = CONF_TILEMAP_WIDTH * y + x;
+//     return TB_TILEMAP[pos];
+// }
 
 
 // void drawScene(void) {
@@ -164,16 +168,30 @@ static void init_rendering(void) {
     SetTextureFilter(render_target.texture, FILTER_POINT);
 }
 
+static SCM set_update_rate(SCM rate) {
+    updateDelay = scm_to_double(rate);
+    return SCM_UNSPECIFIED;
+}
+
+static SCM set_fps(SCM rate) {
+    SetTargetFPS(scm_to_int(rate));
+    updateDelay = 0.0f;
+    return SCM_UNSPECIFIED;
+}
+
 static SCM ray_window(SCM width, SCM height, SCM title, SCM load_callback, SCM update_callback, SCM draw_callback) {
-    int win_w = window_width; // scm_to_int(width);
-    int win_h = window_height; // scm_to_int(height);
+    window_width = scm_to_int(width);
+    window_height = scm_to_int(height);
     char* win_title = scm_to_locale_string(title);
     float target_scale = (float)render_width / (float)window_width / 2.0f;
     float target_width = (float)render_width / target_scale;
     float target_height = (float)render_height / target_scale;
 
-    InitWindow(win_w, win_h, win_title);
-    SetTargetFPS(60);
+    InitWindow(window_width, window_height, win_title);
+    // SetTargetFPS(60);
+
+    
+    float frameTime = 0.0f;
 
     init_rendering();
 
@@ -182,7 +200,15 @@ static SCM ray_window(SCM width, SCM height, SCM title, SCM load_callback, SCM u
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
         float deltaTime = GetFrameTime();
-        scm_call_1(update_callback, scm_from_double(deltaTime));
+        if (updateDelay > 0.0f) {
+            frameTime += deltaTime;
+            if (frameTime >= (1.0f / updateDelay)) {
+                frameTime = 0.0f;
+                scm_call_1(update_callback, scm_from_double(frameTime));
+            }
+        } else {
+            scm_call_1(update_callback, scm_from_double(deltaTime));
+        }
         BeginDrawing();
 
             ClearBackground(BLACK);
@@ -205,7 +231,7 @@ static SCM ray_window(SCM width, SCM height, SCM title, SCM load_callback, SCM u
             //     10,
             //     WHITE
             // );
-              
+        DrawFPS(4, 4); 
         EndDrawing();
     }
     CloseWindow();
@@ -220,10 +246,13 @@ static void* register_functions (void* data)
 int main(int argc, char* argv[]) {
     scm_with_guile (&register_functions, NULL);
     scm_c_define_gsubr ("game", 6, 0, 0, &ray_window);
+    scm_c_define_gsubr ("game:set-update-fps!", 1, 0, 0, &set_update_rate);
+    scm_c_define_gsubr ("game:set-fps!", 1, 0, 0, &set_fps);
     scm_c_define_gsubr ("draw-text", 5, 0, 0, &draw_text);
     texture_module_init();
     color_module_init();
     rect_module_init();
+    init_input();
     // scm_c_define_gsubr ("draw-rect", 1, 0, 0, &draw_rect);
     // scm_c_define_gsubr ("set-color", 3, 0, 0, &set_color);
     // scm_c_define_gsubr ("clear-screen", 3, 0, 0, &clear_screen);

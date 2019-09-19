@@ -99,14 +99,14 @@ SCM rect_set_h(SCM rect, SCM value) {
 void rect_module_init() {
     init_rect_type();
     scm_c_define_gsubr ("rectangle", 4, 0, 0, &rectangle_create);
-    scm_c_define_gsubr ("rectangle->x", 1, 0, 0, &rect_x);
-    scm_c_define_gsubr ("rectangle->y", 1, 0, 0, &rect_y);
-    scm_c_define_gsubr ("rectangle->width", 1, 0, 0, &rect_w);
-    scm_c_define_gsubr ("rectangle->height", 1, 0, 0, &rect_h);
-    scm_c_define_gsubr ("rectangle->x!", 2, 0, 0, &rect_set_x);
-    scm_c_define_gsubr ("rectangle->y!", 2, 0, 0, &rect_set_y);
-    scm_c_define_gsubr ("rectangle->width!", 2, 0, 0, &rect_set_w);
-    scm_c_define_gsubr ("rectangle->height!", 2, 0, 0, &rect_set_h);
+    scm_c_define_gsubr ("rectangle:x", 1, 0, 0, &rect_x);
+    scm_c_define_gsubr ("rectangle:y", 1, 0, 0, &rect_y);
+    scm_c_define_gsubr ("rectangle:width", 1, 0, 0, &rect_w);
+    scm_c_define_gsubr ("rectangle:height", 1, 0, 0, &rect_h);
+    scm_c_define_gsubr ("rectangle:x!", 2, 0, 0, &rect_set_x);
+    scm_c_define_gsubr ("rectangle:y!", 2, 0, 0, &rect_set_y);
+    scm_c_define_gsubr ("rectangle:width!", 2, 0, 0, &rect_set_w);
+    scm_c_define_gsubr ("rectangle:height!", 2, 0, 0, &rect_set_h);
 }
 
 #endif
